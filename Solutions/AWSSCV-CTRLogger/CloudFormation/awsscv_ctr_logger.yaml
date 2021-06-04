@@ -24,6 +24,11 @@ Parameters:
     Default: REPLACEME
     Description: ARN of the awsscv_common_role role
 
+  AWSKMSKey:
+    Type: String
+    Default: REPLACEME
+    Description: ARN of the KMS key
+
   ConnectInstanceName:
     Type: String
     Default: REPLACEME
@@ -65,7 +70,8 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+              SSEAlgorithm: "AES256"
+          - BucketKeyEnabled: false
       BucketName:
         !Join
         - ''
@@ -87,6 +93,26 @@ Resources:
             Resource:
               - !GetAtt awsscvctrloggerbucket.Arn
       ManagedPolicyName: awsscv_ctr_logger_s3_access
+      Roles:
+        - awsscv_common_role
+
+  awsscvctrloggerkmspolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DependsOn:
+      - awsscvctrloggerbucket
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:DescribeKey'
+              - 'kms:GenerateDataKey'
+            Resource:
+              - !Ref AWSKMSKey
+      ManagedPolicyName: awsscv_ctr_logger_kms_access
       Roles:
         - awsscv_common_role
 
